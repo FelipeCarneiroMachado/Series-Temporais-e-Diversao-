@@ -12,8 +12,8 @@ Aplicação de médias móveis, suavização exponencial, método de Holt e Holt
 # Bibliotecas para uso geral
 library(tidyverse)
 library(plotly)
+library(glue)
 ```
-
 
 ## Médias Móveis Simples
 
@@ -67,7 +67,7 @@ tibble(
 
 ## Suavização Exponencial Simples (SES)
 
-Utilizaremos a função `ets` da biblioteca `forecast`. Testaremos com 3 valores para alpha.
+Utilizaremos a função `ets` da biblioteca `forecast`. Testaremos com 3 valores para alpha. A mesma função será utilizada posteriormente para os métodos de Holt e Holt-Winters.
 
 ```{r}
 model.0.1 = ets(
@@ -104,5 +104,95 @@ tibble(
       title = "Suavização Exponencial Simples"
   )
 )
+```
+
+## Método de Holt
+
+Para o método de Holt e Holt-Winters utilizaremos a série de desemprego nos EUA. Em vez de manualmente determinar parâmetros, utilizaremos a funcionalidade de seleção de modelo, já implementada na função. Serão ajustados modelos multiplicativos e aditivos.
+
+```{r}
+data("economics")
+#unemploy.ts = ts(economics$unemploy)
+holt.add = ets(
+  economics$unemploy,
+  model = "AAN", # Holt aditivo
+)
+holt.mult = ets(
+  economics$unemploy,
+  model = "MMN" # Holt com tendencia multiplicativa 
+)
+print("Parâmetros Holt aditivo")
+print(glue("\u03b1 = {holt.add$par['alpha']}"))
+print(glue("\u03b2 = {holt.add$par['beta']}"))
+print(glue("MSE = {holt.add$mse}"))
+print("Parâmetros Holt multiplicativo")
+print(glue("\u03b1 = {holt.mult$par['alpha']}"))
+print(glue("\u03b2 = {holt.mult$par['beta']}"))
+print(glue("MSE = {holt.mult$mse}"))
+
+ggplotly(
+  data.frame(
+    x = 1:length(economics$unemploy),
+    original = economics$unemploy,
+    additive = holt.add$fitted, 
+    multiplicative = holt.mult$fitted
+  ) |> 
+    ggplot(aes(x = x)) +
+    geom_line(aes(y = original, color = "Original")) +
+    geom_line(aes(y = additive, color = "Holt aditivo")) +
+    geom_line(aes(y = multiplicative, color = "Holt multiplicativo")) +
+    labs(
+      title = "Desemprego (EUA) com método de Holt",
+      x = "x (datas indeterminadas)",
+      y = "Desempregados em milhares"
+    )
+)
+
+```
+
+
+## Método de Holt-Winters
+
+Utilizaremos novamente a série de concentrações de CO2, pois é necessária sazonalidade, caso contrário, a função `ets` retorna um erro.
+
+```{r}
+
+hw.add = ets(
+  co2,
+  model = "AAA", # Holt-Winters aditivo
+)
+hw.mult = ets(
+  co2,
+  model = "MMM" # Holt-Winters multiplicativo 
+)
+print("Parâmetros Holt-Winters aditivo")
+print(glue("\u03b1 = {hw.add$par['alpha']}"))
+print(glue("\u03b2 = {hw.add$par['beta']}"))
+print(glue("\u03b3 = {hw.add$par['gamma']}"))
+print(glue("MSE = {hw.add$mse}"))
+print("Parâmetros Holt-Winters multiplicativo")
+print(glue("\u03b1 = {hw.mult$par['alpha']}"))
+print(glue("\u03b2 = {hw.mult$par['beta']}"))
+print(glue("\u03b3 = {hw.mult$par['gamma']}"))
+print(glue("MSE = {hw.mult$mse}"))
+
+ggplotly(
+  data.frame(
+    x = as.Date(as.yearmon(time(co2))),
+    original = as.numeric(co2),
+    additive = hw.add$fitted, 
+    multiplicative = hw.mult$fitted
+  ) |> 
+    ggplot(aes(x = x)) +
+    geom_line(aes(y = original, color = "Original")) +
+    geom_line(aes(y = additive, color = "Holt-Winters aditivo")) +
+    geom_line(aes(y = multiplicative, color = "Holt-Winters multiplicativo")) +
+    labs(
+      title = "Concentração de CO2 com método de Holt-Winters",
+      x = "data",
+      y = "Concentração de CO2"
+    )
+)
+
 ```
 
