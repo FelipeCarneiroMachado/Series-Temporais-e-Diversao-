@@ -1,0 +1,108 @@
+---
+title: "Suavizacao"
+output: html_document
+author: "Felipe Carneiro"
+---
+
+# Suavização de Séries Temporais
+
+Aplicação de médias móveis, suavização exponencial, método de Holt e Holt-Winters
+
+```{r message=FALSE}
+# Bibliotecas para uso geral
+library(tidyverse)
+library(plotly)
+```
+
+
+## Médias Móveis Simples
+
+Utilizaremos a função `ma` do pacote `forecast` para suavização e o dataset de concentrações atmosféricas de CO2.
+
+```{r message=FALSE}
+library(forecast)
+library(zoo)
+data(co2)
+co2_df = tibble(
+  date = as.Date(as.yearmon(time(co2))),
+  value = as.numeric(co2)
+)
+co2_df |> 
+  ggplot(aes(x = date, y = value)) +
+  geom_line() +
+  labs(
+    title = "Concentração atmosférica mensal de CO2",
+    x = "Mês",
+    y = "Concentração"
+   ) +
+  theme_minimal()
+```
+
+```{r warnings = FALSE}
+# Computar MMS com ordem 3, 5 e 7
+ma.co2.3 = ma(co2, order = 3)
+ma.co2.5 = ma(co2, order = 5)
+ma.co2.7 = ma(co2, order = 7)
+ggplotly(
+tibble(
+  date = as.Date(as.yearmon(time(co2))),
+  original = as.numeric(co2),
+  ma.3 = as.numeric(ma.co2.3),
+  ma.5 = as.numeric(ma.co2.5),
+  ma.7 = as.numeric(ma.co2.7)
+) |> 
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = original, color = "Orginal"))+
+  geom_line(aes(y = ma.3, color = "k = 3")) +
+  geom_line(aes(y = ma.5, color = "k = 5")) +
+  geom_line(aes(y = ma.7, color = "k = 7"))+
+  labs(
+    title = "Suavização por MMS",
+    x = "Data",
+    y = "Concentração"
+  )
+)  
+  
+```
+
+## Suavização Exponencial Simples (SES)
+
+Utilizaremos a função `ets` da biblioteca `forecast`. Testaremos com 3 valores para alpha.
+
+```{r}
+model.0.1 = ets(
+  co2, 
+  model = "ANN", # Denota o SES
+  alpha = 0.1
+)
+model.0.5 = ets(
+  co2, 
+  model = "ANN", 
+  alpha = 0.5
+)
+model.0.9 = ets(
+  co2, 
+  model = "ANN", # Denota o SES
+  alpha = 0.9
+)
+ggplotly(
+tibble(
+    date = as.Date(as.yearmon(time(co2))),
+    original = as.numeric(co2),
+    es.0.1 = as.numeric(model.0.1$fitted),
+    es.0.5 = as.numeric(model.0.5$fitted),
+    es.0.9 = as.numeric(model.0.9$fitted),
+  ) |> 
+    ggplot(aes(x = date)) +
+    geom_line(aes(y = original, color = "Original")) +
+    geom_line(aes(y = es.0.1, color = "\u03b1 = 0.1")) +
+    geom_line(aes(y = es.0.5, color = "\u03b1 = 0.5")) +
+    geom_line(aes(y = es.0.9, color = "\u03b1 = 0.9")) +
+    labs(
+      x = "Data",
+      y = "Concentração",
+      title = "Suavização Exponencial Simples"
+  )
+)
+```
+
