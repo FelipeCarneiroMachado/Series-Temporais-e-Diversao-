@@ -14,6 +14,7 @@ library(tidyverse, quietly = TRUE)
 library(ggplot2, quietly = TRUE)
 library(broom, quietly = TRUE)
 library(plotly, quietly = TRUE)
+library(forecast, quietly = TRUE)
 ```
 
 
@@ -44,6 +45,13 @@ crimes_mensal_sp_wide <- indicadores_seguranca_publica_uf |>
   ) |> 
   arrange(Data) |> 
   replace_na(list(`Lesão corporal seguida de morte` = 0))
+
+crimes_mensal_sp_long <- crimes_mensal_sp_wide |> 
+  pivot_longer(
+    cols=!c(Data),
+    names_to = "Tipo.crime",
+    values_to = "Ocorrencia"
+  )
 ```
 
 Vamos plotar as series para visualizar as variacoes no tempo
@@ -72,5 +80,90 @@ crimes_mensal_sp_wide |>
   ggplot(aes(x = Data, y = Ocorrencia, color = `Tipo.crime`)) +
   geom_line()
 ```
-bababbab
+
+
+Observaremos primeiro a serie de Roubo de Veicuos
+
+```{r}
+crimes_mensal_sp_wide |> 
+  filter(Data >= "2015-01-01" & Data <= "2020-01-01") |> 
+  ggplot(aes(x = Data, y = `Roubo de veículo`))+
+  geom_line() +
+  scale_x_date(
+    NULL,
+    breaks = scales::breaks_width("6 month"),
+    labels = scales::label_date("%y-%m")
+  )
+```
+
+
+Aparenta-se que existe sazonalidade, observe picos proximos de outubro
+
+
+## Analise geral de ACF e PACF
+
+```{r}
+roubos_ts <- crimes_mensal_sp_wide$`Roubo de veículo` |> 
+  ts(start = c(2015, 1), end = c(2022, 8), frequency = 12)
+acf(roubos_ts)
+pacf(roubos_ts)
+```
+
+
+Nota-se que a ACF possui valores que decaindo, e a PACF possui poucos picos, sendo um na marca de um ano, indicando sazonalidade.
+
+
+## Ajuste com modelo de Holt-Winters
+
+```{r}
+# Separacao de treino e teste 2015-2020 de treino, 2021-2022 de teste
+
+train.roubos_ts <- window(roubos_ts, start = c(2015, 1), end = c(2020, 1))
+test.roubos_ts <- window(roubos_ts, start = c(2020, 2))
+hw.fit <- HoltWinters(train.roubos_ts, seasonal = "additive")
+plot(hw.fit)
+cat(sprintf("Holt-Winters ajustado\n"))
+cat(sprintf("MSE = %f\n", hw.fit$SSE / length(train.roubos_ts)))
+cat(sprintf("alpha = %f\n", hw.fit$alpha))
+cat(sprintf("beta = %f\n", hw.fit$beta))
+cat(sprintf("gama = %f\n", hw.fit$gamma))
+```
+
+
+```{r}
+hw.forecast <- forecast(
+  hw.fit,
+  h = length(test.roubos_ts),
+)
+data.frame(
+  time = c(time(window(train.roubos_ts, start = c(2016, 1))), time(test.roubos_ts)),
+  original = c(as.numeric(window(train.roubos_ts, start = c(2016, 1))), as.numeric(test.roubos_ts)),
+  predicted = c(as.numeric(hw.fit$fitted[,"xhat"]), as.numeric(hw.forecast$mean))
+) |> 
+  ggplot(aes(x = time)) +
+  geom_vline(xintercept = 2020) +
+  geom_line(aes(y = original, colour = "blue")) +
+  geom_line(aes(y = predicted, colour = "orange"))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
