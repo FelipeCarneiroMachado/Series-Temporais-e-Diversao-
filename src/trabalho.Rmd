@@ -61,3 +61,16 @@ crimes_mensal_sp_wide |>
 
 Nota-se que furto e roubo de veiculos tem maiores valores, com sazonalidade mais aparente a primeira vista. Outros crimes tem valores mais constantes, sendo necessario visualizacao mais proxima
 
+```{r}
+crimes_mensal_sp_wide |>
+  select(!c(`Roubo de veículo`, `Furto de veículo`)) |> 
+  pivot_longer(
+    cols=!c(Data),
+    names_to = "Tipo.crime",
+    values_to = "Ocorrencia"
+  ) |> 
+  ggplot(aes(x = Data, y = Ocorrencia, color = `Tipo.crime`)) +
+  geom_line()
+```
+
+
