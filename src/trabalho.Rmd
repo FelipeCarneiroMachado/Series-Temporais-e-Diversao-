@@ -72,5 +72,5 @@ crimes_mensal_sp_wide |>
   ggplot(aes(x = Data, y = Ocorrencia, color = `Tipo.crime`)) +
   geom_line()
 ```
-bababbabababbbabbb
+bababbabababbba
 
