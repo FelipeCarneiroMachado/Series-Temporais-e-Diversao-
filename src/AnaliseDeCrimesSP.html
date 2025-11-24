@@ -562,7 +562,7 @@ summary(sarima.fit)</code></pre>
 data.frame(
   time = c(time(window(train.roubos_ts, start = c(2016, 1))), time(test.roubos_ts)),
   original = c(as.numeric(window(train.roubos_ts, start = c(2016, 1))), as.numeric(test.roubos_ts)),
-  predicted = c(as.numeric(fitted(sarima.fit)[time(fitted(sarima.fit)) &gt;= 2016]), as.numeric(sarima.forecast$mean))
+  predicted = c(as.numeric(window(fitted(sarima.fit), start = c(2016, 1))), as.numeric(sarima.forecast$mean))
 ) |&gt; 
   ggplot(aes(x = time)) +
   geom_vline(xintercept = 2020) +
