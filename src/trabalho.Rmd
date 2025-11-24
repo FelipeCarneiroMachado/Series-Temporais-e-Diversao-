@@ -113,19 +113,6 @@ pacf(roubos_ts)
 Nota-se que a ACF possui valores que decaindo, e a PACF possui poucos picos, sendo um na marca de um ano, indicando sazonalidade.
 
 
-## Testes de Raiz Unitária
-
-Para validar formalmente a estacionariedade da série, serão realizados os testes de Raiz Unitária: ADF (Augmented Dickey-Fuller), KPSS (Kwiatkowski-Phillips-Schmidt-Shin) e PP (Phillips-Perron).
-
-```{r}
-library(tseries, quietly = TRUE)
-
-adf.test(roubos_ts)
-kpss.test(roubos_ts)
-pp.test(roubos_ts)
-```
-
-
 ## Ajuste com modelo de Holt-Winters
 
 ```{r}
@@ -159,24 +146,33 @@ data.frame(
   geom_line(aes(y = predicted, colour = "orange"))
 ```
 
+## Analise dos Residuos
+
+Vamos plotar os residuos para ver se restou algum padrao. Se estiverem aleatorios (sem ondas), indica que o modelo esta bom.
+
+```{r}
+residuos <- residuals(hw.fit)
+
+par(mfrow = c(1, 2))
+plot(residuos, main = "Residuos ao longo do tempo", ylab = "Residuos")
+abline(h = 0, col = "red", lty = 2)
+hist(residuos, main = "Histograma dos Residuos", xlab = "Residuos", col = "lightblue", breaks = 15)
+par(mfrow = c(1, 1))
+```
+
+Se os residuos parecerem aleatorios, o modelo capturou bem os padroes da serie.
 
 
+## Metricas de Erro
 
+Agora vamos calcular as metricas de erro para avaliar as previsoes.
 
+```{r}
+acc <- accuracy(hw.forecast, test.roubos_ts)
 
+cat("\n=== Metricas de Desempenho ===\n")
+cat(sprintf("RMSE (Test): %.2f\n", acc[2, "RMSE"]))
+cat(sprintf("MAPE (Test): %.2f%%\n", acc[2, "MAPE"]))
+```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+O MAPE mostra o percentual de erro medio. O RMSE mostra o erro em numero de roubos.
