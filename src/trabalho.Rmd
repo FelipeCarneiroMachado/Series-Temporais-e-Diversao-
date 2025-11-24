@@ -5,7 +5,7 @@ output: html_document
 
 # Trabalho final de Séries Temporais e Aprendizado Dinâmico
 
-Realizado por: - Felipe Carneiro Machado - Thales Sena de Queiroz - Abuja
+Realizado por: - Felipe Carneiro Machado - Thales Sena de Queiroz - Felipe de Castro Azambuja
 
 ## Importação de pacotes
 
