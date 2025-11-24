@@ -146,7 +146,7 @@ data.frame(
   geom_line(aes(y = predicted, colour = "orange"))
 ```
 
-## Analise dos Residuos
+### Analise dos Residuos do Holt-Winters
 
 Vamos plotar os residuos para ver se restou algum padrao. Se estiverem aleatorios (sem ondas), indica que o modelo esta bom.
 
@@ -163,7 +163,7 @@ par(mfrow = c(1, 1))
 Se os residuos parecerem aleatorios, o modelo capturou bem os padroes da serie.
 
 
-## Metricas de Erro
+### Metricas de Erro do Holt-Winters
 
 Agora vamos calcular as metricas de erro para avaliar as previsoes.
 
