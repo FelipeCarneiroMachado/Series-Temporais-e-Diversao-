@@ -146,7 +146,7 @@ data.frame(
   geom_line(aes(y = predicted, colour = "orange"))
 ```
 
-## Analise dos Residuos
+### Analise dos Residuos do Holt-Winters
 
 Vamos plotar os residuos para ver se restou algum padrao. Se estiverem aleatorios (sem ondas), indica que o modelo esta bom.
 
@@ -163,7 +163,7 @@ par(mfrow = c(1, 1))
 Se os residuos parecerem aleatorios, o modelo capturou bem os padroes da serie.
 
 
-## Metricas de Erro
+### Metricas de Erro do Holt-Winters
 
 Agora vamos calcular as metricas de erro para avaliar as previsoes.
 
@@ -176,3 +176,57 @@ cat(sprintf("MAPE (Test): %.2f%%\n", acc[2, "MAPE"]))
 ```
 
 O MAPE mostra o percentual de erro medio. O RMSE mostra o erro em numero de roubos.
+
+
+## Ajuste com modelo SARIMA
+
+Agora vamos ajustar um modelo SARIMA para comparar com o Holt-Winters. Usaremos a funcao auto.arima() para encontrar o melhor modelo automaticamente.
+
+```{r}
+sarima.fit <- auto.arima(train.roubos_ts, seasonal = TRUE, stepwise = FALSE, approximation = FALSE)
+summary(sarima.fit)
+```
+
+Realizamos a previsao para o periodo de teste:
+
+```{r}
+sarima.forecast <- forecast(sarima.fit, h = length(test.roubos_ts))
+
+data.frame(
+  time = c(time(window(train.roubos_ts, start = c(2016, 1))), time(test.roubos_ts)),
+  original = c(as.numeric(window(train.roubos_ts, start = c(2016, 1))), as.numeric(test.roubos_ts)),
+  predicted = c(as.numeric(window(fitted(sarima.fit), start = c(2016, 1))), as.numeric(sarima.forecast$mean))
+) |> 
+  ggplot(aes(x = time)) +
+  geom_vline(xintercept = 2020) +
+  geom_line(aes(y = original, colour = "blue")) +
+  geom_line(aes(y = predicted, colour = "orange"))
+```
+
+
+### Analise dos Residuos do SARIMA
+
+Verificamos se os residuos do SARIMA se comportam de forma aleatoria.
+
+```{r}
+residuos_sarima <- residuals(sarima.fit)
+
+par(mfrow = c(1, 2))
+plot(residuos_sarima, main = "Residuos ao longo do tempo", ylab = "Residuos")
+abline(h = 0, col = "red", lty = 2)
+hist(residuos_sarima, main = "Histograma dos Residuos", xlab = "Residuos", col = "lightblue", breaks = 15)
+par(mfrow = c(1, 1))
+```
+
+
+### Metricas de Erro do SARIMA
+
+Calculamos as metricas de erro para comparar com o Holt-Winters.
+
+```{r}
+acc_sarima <- accuracy(sarima.forecast, test.roubos_ts)
+
+cat("\n=== Metricas de Desempenho (SARIMA) ===\n")
+cat(sprintf("RMSE (Test): %.2f\n", acc_sarima[2, "RMSE"]))
+cat(sprintf("MAPE (Test): %.2f%%\n", acc_sarima[2, "MAPE"]))
+```
