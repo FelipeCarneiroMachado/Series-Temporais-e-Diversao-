@@ -252,3 +252,18 @@ if(lb_test$p.value > 0.05){
 A análise comparativa indicou o método de Holt-Winters aditivo como o modelo mais adequado para a previsão da série de roubos. Após a remoção da quebra estrutural referente ao período da pandemia (2020-2021), o modelo demonstrou alta capacidade preditiva, apresentando um MAPE de 6.69% no conjunto de teste.
 
 A validação estatística foi confirmada pela análise de resíduos: o teste de Ljung-Box resultou em um p-valor de 0.3347 (>0.05), indicando a ausência de autocorrelação serial nos resíduos. Além disso, a análise visual confirmou a normalidade dos erros. Conclui-se que o modelo é estatisticamente robusto e seguro para realizar previsões futuras.
+
+```{r}
+
+h <- length(test.roubos_ts)
+plot(roubos_ts, main= "Comparação final entre modelos", ylab="Roubos", xlab="Mes")
+
+previsao_hw <- predict(hw.fit, n.ahead=h)
+lines(previsao_hw, col="red", lw=1.5)
+
+previsao_sarima <- predict(modelo_sarima, n.ahead=h)
+lines(previsao_sarima$pred, col="blue", lw=1.5)
+
+legend("topright", legend = c("Real", "Holt Winters", "SARIMA"), col=c("black", "red", "blue"), lty=1, cex=0.8)
+```
+
