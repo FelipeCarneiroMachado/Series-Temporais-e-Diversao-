@@ -87,6 +87,7 @@ crimes_mensal_sp_wide |>
   filter(Data >= "2015-01-01" & Data <= "2020-01-01") |> 
   ggplot(aes(x = Data, y = `Roubo de veículo`))+
   geom_line() +
+  labs(title="Serie de Roubos de Carros") +
   scale_x_date(
     NULL,
     breaks = scales::breaks_width("6 month"),
@@ -128,7 +129,6 @@ hw.fit.mult <- HoltWinters(train.roubos_ts, seasonal = "multiplicative")
 plot(hw.fit.mult, main = "Holt-Winters: Ajuste Multiplicativo")
 mse_mult <- hw.fit.mult$SSE / length(train.roubos_ts)
 mse_add <- hw.fit$SSE / length(train.roubos_ts)
-
 cat(sprintf("MSE Aditivo: %f\n", mse_add))
 cat(sprintf("MSE Multiplicativo: %f\n", mse_mult))
 
@@ -251,7 +251,7 @@ if(lb_test$p.value > 0.05){
 
 A análise comparativa indicou o método de Holt-Winters aditivo como o modelo mais adequado para a previsão da série de roubos. Após a remoção da quebra estrutural referente ao período da pandemia (2020-2021), o modelo demonstrou alta capacidade preditiva, apresentando um MAPE de 6.69% no conjunto de teste.
 
-A validação estatística foi confirmada pela análise de resíduos: o teste de Ljung-Box resultou em um p-valor de 0.3347 (>0.05), indicando a ausência de autocorrelação serial nos resíduos. Além disso, a análise visual confirmou a normalidade dos erros. Conclui-se que o modelo é estatisticamente robusto e seguro para realizar previsões futuras.
+A validação estatística foi confirmada pela análise de resíduos: o teste de Ljung-Box resultou em um p-valor de 0.3347 (\>0.05), indicando a ausência de autocorrelação serial nos resíduos. Além disso, a análise visual confirmou a normalidade dos erros. Conclui-se que o modelo é estatisticamente robusto e seguro para realizar previsões futuras.
 
 ```{r}
 
@@ -266,4 +266,3 @@ lines(previsao_sarima$pred, col="blue", lw=1.5)
 
 legend("topright", legend = c("Real", "Holt Winters", "SARIMA"), col=c("black", "red", "blue"), lty=1, cex=0.8)
 ```
-
